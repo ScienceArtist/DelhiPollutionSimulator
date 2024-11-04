@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delhi Pollution Simulator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 min-h-screen p-6">
+    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg">
+        <!-- Header -->
+        <div class="p-6 border-b border-gray-200">
+            <h1 class="text-2xl font-bold flex items-center gap-2">
+                Delhi Governance Powers & Pollution Simulator
+                <svg class="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" stroke-width="2"/>
+                    <path stroke-width="2" d="M12 16v-4M12 8h.01"/>
+                </svg>
+            </h1>
+        </div>
+
+        <div class="p-6 space-y-6">
+            <!-- Autonomy Slider -->
+            <div class="space-y-4">
+                <label class="block text-lg font-medium text-gray-900">
+                    Delhi Government Autonomy Level: <span id="autonomyValue">35</span>%
+                </label>
+                <input
+                    type="range"
+                    min="35"
+                    max="100"
+                    value="35"
+                    id="autonomySlider"
+                    class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+            </div>
+
+            <!-- Power Distribution Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="p-4 border rounded-lg bg-orange-50 border-orange-200">
+                    <div class="text-lg font-semibold text-orange-900">Delhi Govt</div>
+                    <div class="text-2xl font-bold text-orange-800" id="stateValue">35%</div>
+                </div>
+                <div class="p-4 border rounded-lg bg-blue-50 border-blue-200">
+                    <div class="text-lg font-semibold text-blue-900">Central Govt</div>
+                    <div class="text-2xl font-bold text-blue-800" id="centralValue">39%</div>
+                </div>
+                <div class="p-4 border rounded-lg bg-green-50 border-green-200">
+                    <div class="text-lg font-semibold text-green-900">LG Powers</div>
+                    <div class="text-2xl font-bold text-green-800" id="lgValue">26%</div>
+                </div>
+            </div>
+
+            <!-- AQI Alert -->
+            <div id="aqiAlert" class="border rounded-lg p-4 border-l-4">
+                <div class="flex justify-between items-center">
+                    <span class="text-lg font-medium">Current AQI Level: <span id="aqiValue">400</span></span>
+                    <span id="aqiCategory" class="font-semibold">Hazardous</span>
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="h-64 w-full">
+                <canvas id="pollutionChart"></canvas>
+            </div>
+
+            <!-- Improvements Section -->
+            <div class="space-y-4">
+                <h3 class="font-semibold text-lg text-gray-900">Key Improvements with Full State Powers:</h3>
+                <ul class="list-disc list-inside space-y-2 text-gray-700">
+                    <li>Unified command and control for pollution response</li>
+                    <li>Quick decision-making during pollution emergencies</li>
+                    <li>Better coordination between different departments</li>
+                    <li>Direct control over law enforcement for pollution violations</li>
+                    <li>Streamlined implementation of environmental policies</li>
+                </ul>
+            </div>
+
+            <!-- Footer Note -->
+            <div class="text-sm text-gray-500 bg-gray-50 rounded-lg p-4">
+                Note: This is a simplified simulation for demonstration purposes. Actual pollution reduction would depend on multiple complex factors beyond just governance structure.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Utility functions
+        function getPowerDistribution(autonomyLevel) {
+            const remainingPower = 100 - autonomyLevel;
+            const centralShare = Math.floor(remainingPower * 0.6);
+            const lgShare = remainingPower - centralShare;
+            return {
+                state: autonomyLevel,
+                central: centralShare,
+                lg: lgShare
+            };
+        }
+
+        function calculatePollutionLevel(autonomyLevel) {
+            const baseAQI = 400;
+            const maxReduction = 250;
+            const reduction = (autonomyLevel / 100) * maxReduction;
+            return Math.max(baseAQI - reduction, 150);
+        }
+
+        function getAQICategory(aqi) {
+            if (aqi > 300) return { label: 'Hazardous', color: '#7E0023' };
+            if (aqi > 200) return { label: 'Very Poor', color: '#A70026' };
+            if (aqi > 150) return { label: 'Poor', color: '#D35400' };
+            if (aqi > 100) return { label: 'Moderate', color: '#F39C12' };
+            if (aqi > 50) return { label: 'Satisfactory', color: '#27AE60' };
+            return { label: 'Good', color: '#2ECC71' };
+        }
+
+        // Chart initialization
+        const ctx = document.getElementById('pollutionChart').getContext('2d');
+        let pollutionChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [35, 35, 100],
+                datasets: [{
+                    label: 'AQI Level',
+                    data: [calculatePollutionLevel(35), calculatePollutionLevel(35), calculatePollutionLevel(100)],
+                    borderColor: '#8884d8',
+                    backgroundColor: '#8884d8',
+                    borderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'State Autonomy %',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        },
+                        min: 35,
+                        max: 100,
+                        grid: {
+                            display: true,
+                            drawBorder: true,
+                            drawOnChartArea: true,
+                            drawTicks: true,
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'AQI Level',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        },
+                        min: 150,
+                        max: 400,
+                        grid: {
+                            display: true,
+                            drawBorder: true,
+                            drawOnChartArea: true,
+                            drawTicks: true,
+                        }
+                    }
+                },
+                animation: {
+                    duration: 300
+                }
+            }
+        });
+
+        // Update UI
+        function updateUI(autonomyLevel) {
+            const powers = getPowerDistribution(autonomyLevel);
+            const pollutionLevel = calculatePollutionLevel(autonomyLevel);
+            const aqiStatus = getAQICategory(pollutionLevel);
+
+            // Update values
+            document.getElementById('autonomyValue').textContent = autonomyLevel;
+            document.getElementById('stateValue').textContent = powers.state + '%';
+            document.getElementById('centralValue').textContent = powers.central + '%';
+            document.getElementById('lgValue').textContent = powers.lg + '%';
+            document.getElementById('aqiValue').textContent = Math.round(pollutionLevel);
+            
+            const aqiAlert = document.getElementById('aqiAlert');
+            const aqiCategory = document.getElementById('aqiCategory');
+            aqiAlert.style.borderLeftColor = aqiStatus.color;
+            aqiCategory.style.color = aqiStatus.color;
+            aqiCategory.textContent = aqiStatus.label;
+
+            // Update chart
+            pollutionChart.data.labels = [35, autonomyLevel, 100];
+            pollutionChart.data.datasets[0].data = [
+                calculatePollutionLevel(35),
+                calculatePollutionLevel(autonomyLevel),
+                calculatePollutionLevel(100)
+            ];
+            pollutionChart.update('none'); // Update without animation for smoother slider response
+        }
+
+        // Event Listeners
+        document.getElementById('autonomySlider').addEventListener('input', (e) => {
+            updateUI(parseInt(e.target.value));
+        });
+
+        // Initial render
+        updateUI(35);
+    </script>
+</body>
+</html>
